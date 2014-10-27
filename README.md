@@ -32,3 +32,62 @@ WAIT_TIME_OUT: When threads are waiting on the connection pool to give it a conn
 
 MIN_SIZE: The connection pool is initialized to <MIN_SIZE> number of connections. The maintainConnectionPool() method also ensures that there are always atleast <MIN_SIZE> number of connections available in the connection pool.
 
+## Folder Structure
+```
+├── README.md
+├── pom.xml
+└── src
+    ├── main
+    │   └── java
+    │       └── com
+    │           ├── connection
+    │           │   ├── ConnectionState.java (Enumeration. E.g. closed, open, timed_out etc.)
+    │           │   ├── event
+    │           │   │   ├── ConnectionEvent.java
+    │           │   │   └── ConnectionEventListener.java  (Listens for connection events like close, error, timeout
+    │           │   │       etc. The connection pool holds a reference to this. The actions for these events are
+    │           │   │       implemented by the pool)
+    │           │   └── impl
+    │           │       ├── AbstractConnectionDecorator.java
+    │           │       └── PooledConnectionImpl.java (A decorated connection with additional features such as a
+    │           │           timeout timer task, synchronized methods for setting connection state et al)    
+    │           └── connectionpool
+    │               ├── ConnectionPool.java (Interface with two methods)
+    │               ├── ConnectionPoolBuilder.java (Loads properties and builds a connection pool)
+    │               ├── ConnectionPoolImpl.java (Implements a connection pool with a event listener, maintenance
+    │                   timer task, synchronized methods to release and get connections)
+    │               └── ConnectionPoolProperties.java (Loader class for properties)
+    └── test
+        ├── java
+        │   └── com
+        │       └── connectionpool
+        │           ├── mock
+        │           │   └── MockInitialContext.java (Mocking the initial context to simulate a app server's ability
+        │           │       to give us a data source and perform some basic sql operations on it)
+        │           ├── sample
+        │           │   ├── SampleConnectionConstants.java
+        │           │   ├── SampleConnectionPoolFactory.java (Singleton. could be in the main implementation if I
+        │           │       didn't need touse a mock initial context)
+        │           │   ├── SampleConnectionUtil.java
+        │           │   ├── SampleConsumer.java (A consumer requests connections and pretends to do something with
+        │           │       it)
+        │           │   └── SampleErroneousConsumer.java  (A consumer requests connections and pretends to do
+        │           │       something with it but messes things up instead and causes a sql error)
+        │           └── test
+        │               └── TestConnectionPoolImpl.java (9 tests that test various success/error scenarios)
+        └── resources
+            ├── connection-pool.properties
+            └── log4j.properties
+```
+## Things to do
+1. Remove synchronized keyword from the implementation. Use locks and conditions.
+2. Make the connection factory independent of a concrete initial context implementation and move the factory to main source folders
+3. Make the tests more comprehensive by actually simulating database operations (maybe using a mock database)
+4. Add additional configurable properties such as unused timeout, age timeout, purge policy
+5. Additional features to make this scalable from a distributed computing perspective
+
+## Disclaimer:
+1. I am not responsible for anything you do with this code. I don't care who, what, why, when, where or how.
+2. If this does help, mention this repo! I don't expect you to, but it'll be nice if you do :)
+
+## Have fun! :)
