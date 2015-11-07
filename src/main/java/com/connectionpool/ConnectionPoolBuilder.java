@@ -1,8 +1,7 @@
 package com.connectionpool;
 
-import java.sql.SQLException;
-
 import javax.sql.DataSource;
+import java.sql.SQLException;
 
 /**
  * This is the connection pool builder. The purpose is to build a connection pool instance using configuration properties.

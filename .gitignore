@@ -1,0 +1,12 @@
+.DS_Store
+.project
+.classpath
+*.iml
+*.class
+*.jar
+target/
+bin/
+.idea/
+.metadata/
+.settings/
+RemoteSystemsTempFiles/

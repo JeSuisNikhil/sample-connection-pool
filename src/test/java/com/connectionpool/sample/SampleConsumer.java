@@ -1,10 +1,10 @@
 package com.connectionpool.sample;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * This is a sample consumer thread. Used for testing only. Each instance of this thread will do the following:
@@ -21,6 +21,14 @@ public class SampleConsumer implements Runnable {
 	private static final String LOG_THREAD_END = "Ending thread: ";
 	private static final String LOG_THREAD_START = "Starting thread: ";
 	private static Logger logger;
+	private Connection connection;
+	private Long threadWaitTime;
+
+	public SampleConsumer(final Connection connection, final Long threadWaitTime) {
+		super();
+		this.connection = connection;
+		this.threadWaitTime = threadWaitTime;
+	}
 
 	private static Logger getLogger() {
 		if (SampleConsumer.logger == null) {
@@ -33,26 +41,16 @@ public class SampleConsumer implements Runnable {
 	public static void main(final String... args) {
 		SampleConsumer consumer;
 		try {
-			consumer = new SampleConsumer(SampleConnectionUtil.getConnection(), 20000l);
+			consumer = new SampleConsumer(SampleConnectionUtil.getConnection(), 20000L);
 			consumer.run();
 		} catch (final SQLException e) {
 			SampleConsumer.getLogger().log(Level.ERROR, e.getMessage(), e);
 		}
 	}
 
-	private Connection connection;
-	private Long threadWaitTime;
-
-	public SampleConsumer(final Connection connection, final Long threadWaitTime) {
-		super();
-		this.connection = connection;
-		this.threadWaitTime = threadWaitTime;
-	}
-
 	/**
 	 * Simulated connection processing. It actually just waits around for threadWaitTime.
 	 *
-	 * @param connection
 	 * @throws InterruptedException
 	 */
 	private void doSomething() throws InterruptedException {
@@ -63,8 +61,16 @@ public class SampleConsumer implements Runnable {
 		return this.connection;
 	}
 
+	public void setConnection(final Connection connection) {
+		this.connection = connection;
+	}
+
 	public Long getThreadWaitTime() {
 		return this.threadWaitTime;
+	}
+
+	public void setThreadWaitTime(final Long threadWaitTime) {
+		this.threadWaitTime = threadWaitTime;
 	}
 
 	@Override
@@ -84,13 +90,5 @@ public class SampleConsumer implements Runnable {
 		} catch (final Exception e) {
 			SampleConsumer.getLogger().log(Level.ERROR, e.getMessage(), e);
 		}
-	}
-
-	public void setConnection(final Connection connection) {
-		this.connection = connection;
-	}
-
-	public void setThreadWaitTime(final Long threadWaitTime) {
-		this.threadWaitTime = threadWaitTime;
 	}
 }

@@ -10,7 +10,7 @@ public enum ConnectionState {
 
 	private Integer state;
 
-	private ConnectionState(Integer state) {
+	ConnectionState(Integer state) {
 		this.state = state;
 	}
 

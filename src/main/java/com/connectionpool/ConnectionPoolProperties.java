@@ -1,7 +1,6 @@
 package com.connectionpool;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -20,12 +19,12 @@ public class ConnectionPoolProperties {
 
 	private Properties properties;
 
-	public ConnectionPoolProperties() throws FileNotFoundException, IOException {
+	public ConnectionPoolProperties() throws IOException {
 		properties = new Properties();
 		properties.load(new FileInputStream(this.getClass().getClassLoader().getResource(CONNECTION_PROPERTIES_FILE_LOCATION).getPath()));
 	}
 
-	public ConnectionPoolProperties(String fileLocation) throws FileNotFoundException, IOException {
+	public ConnectionPoolProperties(String fileLocation) throws IOException {
 		properties = new Properties();
 		properties.load(new FileInputStream(this.getClass().getClassLoader().getResource(fileLocation).getPath()));
 	}

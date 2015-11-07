@@ -1,20 +1,15 @@
 package com.connectionpool.mock;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-
-import java.sql.Connection;
+import com.connectionpool.sample.SampleConnectionConstants;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import java.sql.Connection;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import com.connectionpool.sample.SampleConnectionConstants;
+import static org.easymock.EasyMock.*;
 
 /**
  * This mocks a context implementation. The purpose is to allow the tests to get data sources and create connections with some basic operations.
@@ -24,14 +19,6 @@ import com.connectionpool.sample.SampleConnectionConstants;
 public class MockInitialContext {
 
 	private static Logger logger;
-
-	private static Logger getLogger() {
-		if (logger == null) {
-			logger = Logger.getLogger(MockInitialContext.class.getSimpleName());
-		}
-		return logger;
-	}
-
 	Context context;
 
 	public MockInitialContext() {
@@ -51,6 +38,13 @@ public class MockInitialContext {
 		} catch (Exception e) {
 			getLogger().log(Level.ERROR, e.getMessage(), e);
 		}
+	}
+
+	private static Logger getLogger() {
+		if (logger == null) {
+			logger = Logger.getLogger(MockInitialContext.class.getSimpleName());
+		}
+		return logger;
 	}
 
 	public Object lookup(String jndiName) throws NamingException {

@@ -9,10 +9,10 @@ import java.sql.SQLException;
  */
 public interface ConnectionEventListener {
 
-	public void connectionClosed(ConnectionEvent event) throws SQLException;
+	void connectionClosed(ConnectionEvent event) throws SQLException;
 
-	public void connectionErrorOccurred(ConnectionEvent event) throws SQLException;
+	void connectionErrorOccurred(ConnectionEvent event) throws SQLException;
 
-	public void connectionTimedOut(ConnectionEvent event) throws SQLException;
+	void connectionTimedOut(ConnectionEvent event) throws SQLException;
 
 }

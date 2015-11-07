@@ -1,21 +1,20 @@
 package com.connectionpool.sample;
 
+import com.connectionpool.ConnectionPool;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import com.connectionpool.ConnectionPool;
-
 /**
  * A not so typical connection utility class. Used for testing only.
- * 
+ *
  * @author nikhilagarwal
  */
 public class SampleConnectionUtil {
 
 	/**
 	 * Get a connection object
-	 * 
-	 * @return
+	 *
 	 * @throws SQLException
 	 */
 	public static Connection getConnection() throws SQLException {
@@ -28,8 +27,7 @@ public class SampleConnectionUtil {
 
 	/**
 	 * Get a connection object
-	 * 
-	 * @return
+	 *
 	 * @throws SQLException
 	 */
 	public static Connection getConnection(String jndiName) throws SQLException {

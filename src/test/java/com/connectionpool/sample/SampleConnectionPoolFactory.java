@@ -1,19 +1,17 @@
 package com.connectionpool.sample;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Hashtable;
-
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
 import com.connectionpool.ConnectionPool;
 import com.connectionpool.ConnectionPoolBuilder;
 import com.connectionpool.ConnectionPoolProperties;
 import com.connectionpool.mock.MockInitialContext;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Hashtable;
 
 /**
  * This is a connection pool factory. Used for testing only. This class pretends to have a connection pool mapped to a data source.
@@ -21,22 +19,26 @@ import com.connectionpool.mock.MockInitialContext;
  * @author nikhilagarwal
  */
 public class SampleConnectionPoolFactory {
-	private static volatile Hashtable<String, ConnectionPool> connections;
-	private static volatile SampleConnectionPoolFactory instance;
-
 	private static final String LOG_INVALID_CONNECTION_PROPERTIES = "Invalid Connection Properties";
-
 	// loggers and messages
 	private static final String LOG_NEW_CONNECTION_POOL = "New connection pool created";
-
+	private static volatile Hashtable<String, ConnectionPool> connections;
+	private static volatile SampleConnectionPoolFactory instance;
 	private static Logger logger;
+
+	/**
+	 * Private constructor to make it a singleton.
+	 */
+	private SampleConnectionPoolFactory() {
+		super();
+	}
 
 	public static SampleConnectionPoolFactory getInstance() {
 		if (instance == null) {
 			synchronized (SampleConnectionPoolFactory.class) {
 				if (instance == null) {
 					instance = new SampleConnectionPoolFactory();
-					connections = new Hashtable<String, ConnectionPool>();
+					connections = new Hashtable<>();
 				}
 			}
 		}
@@ -49,13 +51,6 @@ public class SampleConnectionPoolFactory {
 			logger = Logger.getLogger(SampleConnectionPoolFactory.class.getSimpleName());
 		}
 		return logger;
-	}
-
-	/**
-	 * Private constructor to make it a singleton.
-	 */
-	private SampleConnectionPoolFactory() {
-		super();
 	}
 
 	/**
@@ -112,9 +107,6 @@ public class SampleConnectionPoolFactory {
 
 	/**
 	 * Gets connection pool properties
-	 * 
-	 * @return
-	 * @throws SQLException
 	 */
 	private ConnectionPoolProperties getConnectionPoolProperties() {
 		// get all connection pool properties

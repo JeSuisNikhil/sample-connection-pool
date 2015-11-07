@@ -1,20 +1,6 @@
 package com.connection.impl;
 
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.sql.Struct;
+import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -102,13 +88,28 @@ public class AbstractConnectionDecorator implements Connection {
 	}
 
 	@Override
+	public void setAutoCommit(boolean autoCommit) throws SQLException {
+		connection.setAutoCommit(autoCommit);
+	}
+
+	@Override
 	public String getCatalog() throws SQLException {
 		return connection.getCatalog();
 	}
 
 	@Override
+	public void setCatalog(String catalog) throws SQLException {
+		connection.setCatalog(catalog);
+	}
+
+	@Override
 	public Properties getClientInfo() throws SQLException {
 		return connection.getClientInfo();
+	}
+
+	@Override
+	public void setClientInfo(Properties properties) throws SQLClientInfoException {
+		connection.setClientInfo(properties);
 	}
 
 	@Override
@@ -120,9 +121,18 @@ public class AbstractConnectionDecorator implements Connection {
 		return connection;
 	}
 
+	protected void setConnection(Connection connection) {
+		this.connection = connection;
+	}
+
 	@Override
 	public int getHoldability() throws SQLException {
 		return connection.getHoldability();
+	}
+
+	@Override
+	public void setHoldability(int holdability) throws SQLException {
+		connection.setHoldability(holdability);
 	}
 
 	@Override
@@ -141,13 +151,28 @@ public class AbstractConnectionDecorator implements Connection {
 	}
 
 	@Override
+	public void setSchema(String schema) throws SQLException {
+		connection.setSchema(schema);
+	}
+
+	@Override
 	public int getTransactionIsolation() throws SQLException {
 		return connection.getTransactionIsolation();
 	}
 
 	@Override
+	public void setTransactionIsolation(int level) throws SQLException {
+		connection.setTransactionIsolation(level);
+	}
+
+	@Override
 	public Map<String, Class<?>> getTypeMap() throws SQLException {
 		return connection.getTypeMap();
+	}
+
+	@Override
+	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
+		connection.setTypeMap(map);
 	}
 
 	@Override
@@ -163,6 +188,11 @@ public class AbstractConnectionDecorator implements Connection {
 	@Override
 	public boolean isReadOnly() throws SQLException {
 		return connection.isReadOnly();
+	}
+
+	@Override
+	public void setReadOnly(boolean readOnly) throws SQLException {
+		connection.setReadOnly(readOnly);
 	}
 
 	@Override
@@ -241,43 +271,14 @@ public class AbstractConnectionDecorator implements Connection {
 	}
 
 	@Override
-	public void setAutoCommit(boolean autoCommit) throws SQLException {
-		connection.setAutoCommit(autoCommit);
-	}
-
-	@Override
-	public void setCatalog(String catalog) throws SQLException {
-		connection.setCatalog(catalog);
-	}
-
-	@Override
-	public void setClientInfo(Properties properties) throws SQLClientInfoException {
-		connection.setClientInfo(properties);
-	}
-
-	@Override
 	public void setClientInfo(String name, String value) throws SQLClientInfoException {
 		connection.setClientInfo(name, value);
 
 	}
 
-	protected void setConnection(Connection connection) {
-		this.connection = connection;
-	}
-
-	@Override
-	public void setHoldability(int holdability) throws SQLException {
-		connection.setHoldability(holdability);
-	}
-
 	@Override
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
 		connection.setNetworkTimeout(executor, milliseconds);
-	}
-
-	@Override
-	public void setReadOnly(boolean readOnly) throws SQLException {
-		connection.setReadOnly(readOnly);
 	}
 
 	@Override
@@ -288,21 +289,6 @@ public class AbstractConnectionDecorator implements Connection {
 	@Override
 	public Savepoint setSavepoint(String name) throws SQLException {
 		return connection.setSavepoint(name);
-	}
-
-	@Override
-	public void setSchema(String schema) throws SQLException {
-		connection.setSchema(schema);
-	}
-
-	@Override
-	public void setTransactionIsolation(int level) throws SQLException {
-		connection.setTransactionIsolation(level);
-	}
-
-	@Override
-	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
-		connection.setTypeMap(map);
 	}
 
 	@Override

@@ -1,22 +1,19 @@
 package com.connectionpool;
 
+import com.connection.event.ConnectionEvent;
+import com.connection.event.ConnectionEventListener;
+import com.connection.impl.PooledConnectionImpl;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-import javax.sql.DataSource;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import com.connection.event.ConnectionEvent;
-import com.connection.event.ConnectionEventListener;
-import com.connection.impl.PooledConnectionImpl;
 
 /**
  * The max number of connections available in the connection pool is configured by MAX_IDLE_SIZE. But pool can always keep produce connections until
@@ -25,60 +22,6 @@ import com.connection.impl.PooledConnectionImpl;
  * @author nikhilagarwal
  */
 public class ConnectionPoolImpl implements ConnectionPool {
-
-	/**
-	 * When a connection.close method is called or if there is a timeout or an error event in the connection, the methods implemented by this class
-	 * are called. I am using this primarily to actively connections that have been leased out beyond the connection time out.
-	 * 
-	 * @author nikhilagarwal
-	 */
-	private class PooledConnectionEventListener implements ConnectionEventListener {
-
-		@Override
-		public void connectionClosed(ConnectionEvent event) throws SQLException {
-			if (getLogger().isTraceEnabled()) {
-				getLogger().log(Level.TRACE, LOG_MESSAGE_CONNECTION_CLOSED);
-			}
-			recycleConnection((PooledConnectionImpl) event.getConnection());
-		}
-
-		@Override
-		public void connectionErrorOccurred(ConnectionEvent event) throws SQLException {
-			getLogger().log(Level.WARN, LOG_MESSAGE_CONNECTION_ERROR_OCCURED);
-			recycleConnection((PooledConnectionImpl) event.getConnection());
-		}
-
-		@Override
-		public void connectionTimedOut(ConnectionEvent event) throws SQLException {
-			getLogger().log(Level.WARN, LOG_MESSAGE_CONNECTION_TIMED_OUT);
-			recycleConnection((PooledConnectionImpl) event.getConnection());
-		}
-	}
-
-	/**
-	 * The timer task to maintain the connection pool connections
-	 * 
-	 * @author nikhilagarwal
-	 */
-	private class PooledConnectionMaintenanceTimerTask extends TimerTask {
-
-		@Override
-		public void run() {
-			try {
-				if (getLogger().isTraceEnabled()) {
-					getLogger().log(Level.TRACE, LOG_MESSAGE_CONNECTION_POOL_MAINTENANCE_START);
-				}
-
-				maintainConnectionPool();
-
-				if (getLogger().isTraceEnabled()) {
-					getLogger().log(Level.TRACE, LOG_MESSAGE_CONNECTION_POOL_MAINTENANCE_END);
-				}
-			} catch (SQLException e) {
-				getLogger().log(Level.ERROR, e.getMessage(), e);
-			}
-		}
-	}
 
 	// loggers and messages
 	private static final String LOG_MESSAGE_CONNECTION_CLOSED = "Connection closed";
@@ -95,18 +38,8 @@ public class ConnectionPoolImpl implements ConnectionPool {
 	private static final String LOG_MESSAGE_NEW_CONNECTION_ESTABLISHED = "New connection established. Total Connections Active: ";
 	private static final String LOG_MESSAGE_UNKNOWN_ERROR = "Unknown error.\n";
 	private static Logger logger;
-
-	private static Logger getLogger() {
-		if (logger == null) {
-			logger = Logger.getLogger(ConnectionPoolImpl.class.getSimpleName());
-		}
-		return logger;
-	}
-
 	private BlockingQueue<PooledConnectionImpl> availableConnections;
-
 	private Long connectionTimeOut;
-
 	private DataSource dataSource;
 	private Integer maxIdle;
 	private Integer maxSize;
@@ -116,7 +49,6 @@ public class ConnectionPoolImpl implements ConnectionPool {
 	private TimerTask timerTask;
 	private Integer totalConnectionCount;
 	private Long waitTimeOut;
-
 	/**
 	 * Constructor
 	 */
@@ -132,6 +64,13 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		this.initializeConnectionPool();
 	}
 
+	private static Logger getLogger() {
+		if (logger == null) {
+			logger = Logger.getLogger(ConnectionPoolImpl.class.getSimpleName());
+		}
+		return logger;
+	}
+
 	private synchronized void addConnectionToPool(PooledConnectionImpl poolconnectionImpl) {
 		this.getAvailableConnections().offer(poolconnectionImpl);
 		this.incTotalConnectionCount();
@@ -143,7 +82,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 	/**
 	 * Removes the connection from the pool and closes the connection (for real!)
-	 * 
+	 *
 	 * @param connection
 	 * @throws SQLException
 	 */
@@ -154,6 +93,10 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 	public BlockingQueue<PooledConnectionImpl> getAvailableConnections() {
 		return availableConnections;
+	}
+
+	private void setAvailableConnections(BlockingQueue<PooledConnectionImpl> availableConnections) {
+		this.availableConnections = availableConnections;
 	}
 
 	@Override
@@ -177,7 +120,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 			}
 
 			// ask for a connection and wait for the connection time out if the total connection limit is reached
-			connection = (PooledConnectionImpl) this.getAvailableConnections().poll(this.getWaitTimeOut(), TimeUnit.MILLISECONDS);
+			connection = this.getAvailableConnections().poll(this.getWaitTimeOut(), TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			getLogger().log(Level.ERROR, LOG_MESSAGE_UNKNOWN_ERROR, e);
 		}
@@ -201,40 +144,80 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		return connectionTimeOut;
 	}
 
+	public void setConnectionTimeOut(Long connectionTimeOut) {
+		this.connectionTimeOut = connectionTimeOut;
+	}
+
 	private DataSource getDataSource() {
 		return dataSource;
+	}
+
+	private void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
 	}
 
 	private Integer getMaxIdle() {
 		return maxIdle;
 	}
 
+	private void setMaxIdle(Integer maxIdle) {
+		this.maxIdle = maxIdle;
+	}
+
 	private Integer getMaxSize() {
 		return maxSize;
+	}
+
+	private void setMaxSize(Integer maxSize) {
+		this.maxSize = maxSize;
 	}
 
 	private Integer getMinSize() {
 		return minSize;
 	}
 
+	private void setMinSize(Integer minSize) {
+		this.minSize = minSize;
+	}
+
 	public PooledConnectionEventListener getPooledConnectionEventListener() {
 		return pooledConnectionEventListener;
+	}
+
+	public void setPooledConnectionEventListener(PooledConnectionEventListener pooledConnectionEventListener) {
+		this.pooledConnectionEventListener = pooledConnectionEventListener;
 	}
 
 	public Long getTimeBetweenPoolMaintenance() {
 		return timeBetweenPoolMaintenance;
 	}
 
+	public void setTimeBetweenPoolMaintenance(Long timeBetweenPoolMaintenance) {
+		this.timeBetweenPoolMaintenance = timeBetweenPoolMaintenance;
+	}
+
 	public TimerTask getTimerTask() {
 		return timerTask;
+	}
+
+	public void setTimerTask(TimerTask timerTask) {
+		this.timerTask = timerTask;
 	}
 
 	public Integer getTotalConnectionCount() {
 		return totalConnectionCount;
 	}
 
+	private void setTotalConnectionCount(Integer availableConnectionCount) {
+		this.totalConnectionCount = availableConnectionCount;
+	}
+
 	private Long getWaitTimeOut() {
 		return waitTimeOut;
+	}
+
+	private void setWaitTimeOut(Long connectionTimeOut) {
+		this.waitTimeOut = connectionTimeOut;
 	}
 
 	private void incTotalConnectionCount() {
@@ -248,7 +231,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 	 * <li>Instantiate the blocking queue</li>
 	 * <li>Instantiate connections</li>
 	 * </ol>
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	private void initializeConnectionPool() throws SQLException {
@@ -259,7 +242,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		this.setPooledConnectionEventListener(new PooledConnectionEventListener());
 
 		// initialize the pool size to Max Idle. If there are more connections that are being released than the MAX_IDLE_SIZE the pool will dispose
-		BlockingQueue<PooledConnectionImpl> availableConnections = new ArrayBlockingQueue<PooledConnectionImpl>(this.getMaxIdle(), Boolean.TRUE);
+		BlockingQueue<PooledConnectionImpl> availableConnections = new ArrayBlockingQueue<>(this.getMaxIdle(), Boolean.TRUE);
 		this.setAvailableConnections(availableConnections);
 
 		this.initializeConnections();
@@ -267,7 +250,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 	/**
 	 * Find the minimum size of the connection pool and instantiate as many connections. Also increment the total connections count.
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	private synchronized void initializeConnections() throws SQLException {
@@ -277,10 +260,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 	}
 
 	private synchronized void maintainConnectionPool() throws SQLException {
-		Iterator<PooledConnectionImpl> connectionIterator = getAvailableConnections().iterator();
-		while (connectionIterator.hasNext()) {
-			PooledConnectionImpl temp = connectionIterator.next();
-
+		for (PooledConnectionImpl temp : this.getAvailableConnections()) {
 			if (!temp.isValid(0)) {
 				if (getLogger().isInfoEnabled()) {
 					getLogger().log(Level.INFO, LOG_MESSAGE_CONNECTION_POOL_MAINTENANCE_INVALID_FOUND);
@@ -295,7 +275,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 	/**
 	 * Gets a new connection from the data source and sets the pooled connection even listener to it.
-	 * 
+	 *
 	 * @return a new PooledConnectionImpl
 	 * @throws SQLException
 	 */
@@ -307,7 +287,7 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 	/**
 	 * Recycles the connection if the connection pool releases the connection or a consumer closes it.
-	 * 
+	 *
 	 * @param connection
 	 * @throws SQLException
 	 */
@@ -339,8 +319,8 @@ public class ConnectionPoolImpl implements ConnectionPool {
 
 	/**
 	 * Removes the connection from connection pool and decreases the connection count.
-	 * 
-	 * @param connection
+	 *
+	 * @param
 	 */
 	synchronized void removeConnectionFromPool(PooledConnectionImpl connection) {
 		this.getAvailableConnections().remove(connection);
@@ -360,47 +340,57 @@ public class ConnectionPoolImpl implements ConnectionPool {
 		}
 	}
 
-	private void setAvailableConnections(BlockingQueue<PooledConnectionImpl> availableConnections) {
-		this.availableConnections = availableConnections;
+	/**
+	 * When a connection.close method is called or if there is a timeout or an error event in the connection, the methods implemented by this class
+	 * are called. I am using this primarily to actively connections that have been leased out beyond the connection time out.
+	 *
+	 * @author nikhilagarwal
+	 */
+	private class PooledConnectionEventListener implements ConnectionEventListener {
+
+		@Override
+		public void connectionClosed(ConnectionEvent event) throws SQLException {
+			if (getLogger().isTraceEnabled()) {
+				getLogger().log(Level.TRACE, LOG_MESSAGE_CONNECTION_CLOSED);
+			}
+			recycleConnection((PooledConnectionImpl) event.getConnection());
+		}
+
+		@Override
+		public void connectionErrorOccurred(ConnectionEvent event) throws SQLException {
+			getLogger().log(Level.WARN, LOG_MESSAGE_CONNECTION_ERROR_OCCURED);
+			recycleConnection((PooledConnectionImpl) event.getConnection());
+		}
+
+		@Override
+		public void connectionTimedOut(ConnectionEvent event) throws SQLException {
+			getLogger().log(Level.WARN, LOG_MESSAGE_CONNECTION_TIMED_OUT);
+			recycleConnection((PooledConnectionImpl) event.getConnection());
+		}
 	}
 
-	public void setConnectionTimeOut(Long connectionTimeOut) {
-		this.connectionTimeOut = connectionTimeOut;
-	}
+	/**
+	 * The timer task to maintain the connection pool connections
+	 *
+	 * @author nikhilagarwal
+	 */
+	private class PooledConnectionMaintenanceTimerTask extends TimerTask {
 
-	private void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
+		@Override
+		public void run() {
+			try {
+				if (getLogger().isTraceEnabled()) {
+					getLogger().log(Level.TRACE, LOG_MESSAGE_CONNECTION_POOL_MAINTENANCE_START);
+				}
 
-	private void setMaxIdle(Integer maxIdle) {
-		this.maxIdle = maxIdle;
-	}
+				maintainConnectionPool();
 
-	private void setMaxSize(Integer maxSize) {
-		this.maxSize = maxSize;
-	}
-
-	private void setMinSize(Integer minSize) {
-		this.minSize = minSize;
-	}
-
-	public void setPooledConnectionEventListener(PooledConnectionEventListener pooledConnectionEventListener) {
-		this.pooledConnectionEventListener = pooledConnectionEventListener;
-	}
-
-	public void setTimeBetweenPoolMaintenance(Long timeBetweenPoolMaintenance) {
-		this.timeBetweenPoolMaintenance = timeBetweenPoolMaintenance;
-	}
-
-	public void setTimerTask(TimerTask timerTask) {
-		this.timerTask = timerTask;
-	}
-
-	private void setTotalConnectionCount(Integer availableConnectionCount) {
-		this.totalConnectionCount = availableConnectionCount;
-	}
-
-	private void setWaitTimeOut(Long connectionTimeOut) {
-		this.waitTimeOut = connectionTimeOut;
+				if (getLogger().isTraceEnabled()) {
+					getLogger().log(Level.TRACE, LOG_MESSAGE_CONNECTION_POOL_MAINTENANCE_END);
+				}
+			} catch (SQLException e) {
+				getLogger().log(Level.ERROR, e.getMessage(), e);
+			}
+		}
 	}
 }

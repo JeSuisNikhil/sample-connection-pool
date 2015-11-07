@@ -1,16 +1,15 @@
 package com.connection.impl;
 
+import com.connection.ConnectionState;
+import com.connection.event.ConnectionEvent;
+import com.connection.event.ConnectionEventListener;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import com.connection.ConnectionState;
-import com.connection.event.ConnectionEvent;
-import com.connection.event.ConnectionEventListener;
 
 /**
  * A wrapper around connection/connection decorator. This connection implementation has overridden methods to keep track of the connection state and
@@ -20,41 +19,22 @@ import com.connection.event.ConnectionEventListener;
  * @author nikhilagarwal
  */
 public class PooledConnectionImpl extends AbstractConnectionDecorator {
-	/**
-	 * This is the connection time out timer task. When a connection is opened, this thread is scheduled to run after a delay of <CONNECTION_TIME_OUT>
-	 * milliseconds. It will check if the connection is open and if so will mark the connection as timed out.
-	 * 
-	 * @author nikhilagarwal
-	 */
-	private class PooledConnectionTimerTask extends TimerTask {
-
-		public void run() {
-			try {
-				timeout();
-			} catch (SQLException e) {
-				getLogger().log(Level.ERROR, e.getMessage(), e);
-			}
-		}
-	}
-
+	private static final String LOG_MESSAGE_CONNECTION_INVALIDATED = "Connection invalidated";
 	private static Logger logger;
+	private ConnectionEventListener connectionEventListener;
+	private ConnectionState connectionState;
+	private TimerTask timerTask;
+	public PooledConnectionImpl(Connection connection) {
+		this.setConnection(connection);
+		this.setConnectionState(ConnectionState.OPEN);
+		this.setTimerTask(new PooledConnectionTimerTask());
+	}
 
 	private static Logger getLogger() {
 		if (logger == null) {
 			logger = Logger.getLogger(PooledConnectionImpl.class.getSimpleName());
 		}
 		return logger;
-	}
-
-	private static final String LOG_MESSAGE_CONNECTION_INVALIDATED = "Connection invalidated";
-	private ConnectionEventListener connectionEventListener;
-	private ConnectionState connectionState;
-	private TimerTask timerTask;
-
-	public PooledConnectionImpl(Connection connection) {
-		this.setConnection(connection);
-		this.setConnectionState(ConnectionState.OPEN);
-		this.setTimerTask(new PooledConnectionTimerTask());
 	}
 
 	/**
@@ -74,7 +54,7 @@ public class PooledConnectionImpl extends AbstractConnectionDecorator {
 
 	/**
 	 * Actually close the connection. Mark it as disposed so that this is not recycled.
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	public synchronized void dispose() throws SQLException {
@@ -92,17 +72,29 @@ public class PooledConnectionImpl extends AbstractConnectionDecorator {
 		return connectionEventListener;
 	}
 
+	public void setConnectionEventListener(ConnectionEventListener connectionEventListener) {
+		this.connectionEventListener = connectionEventListener;
+	}
+
 	private ConnectionState getConnectionState() {
 		return connectionState;
+	}
+
+	private void setConnectionState(ConnectionState connectionState) {
+		this.connectionState = connectionState;
 	}
 
 	private TimerTask getTimerTask() {
 		return timerTask;
 	}
 
+	private void setTimerTask(TimerTask timerTask) {
+		this.timerTask = timerTask;
+	}
+
 	/**
 	 * Invalidates the connection
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	public synchronized void inValidate() throws SQLException {
@@ -138,7 +130,7 @@ public class PooledConnectionImpl extends AbstractConnectionDecorator {
 
 	/**
 	 * Mark the connection as opened. Should use the overloaded open method instead with the timeout delay
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	public synchronized void open() throws SQLException {
@@ -150,7 +142,7 @@ public class PooledConnectionImpl extends AbstractConnectionDecorator {
 	/**
 	 * Mark the connection as open and set a timeout on it. That timeout will be used to close the connection is it has been in use by a thread for
 	 * too long.
-	 * 
+	 *
 	 * @param delay
 	 * @throws SQLException
 	 */
@@ -163,21 +155,9 @@ public class PooledConnectionImpl extends AbstractConnectionDecorator {
 
 	}
 
-	public void setConnectionEventListener(ConnectionEventListener connectionEventListener) {
-		this.connectionEventListener = connectionEventListener;
-	}
-
-	private void setConnectionState(ConnectionState connectionState) {
-		this.connectionState = connectionState;
-	}
-
-	private void setTimerTask(TimerTask timerTask) {
-		this.timerTask = timerTask;
-	}
-
 	/**
 	 * Start the connection time out timer.
-	 * 
+	 *
 	 * @param delay
 	 */
 	private void startTimer(Long delay) {
@@ -190,7 +170,7 @@ public class PooledConnectionImpl extends AbstractConnectionDecorator {
 	/**
 	 * Marks the connection as timed out. The pooled connection even listener (@see
 	 * com.connectionpool.ConnectionPoolImpl.PooledConnectionEventListener) is the one that handles the timeout.
-	 * 
+	 *
 	 * @throws SQLException
 	 */
 	private synchronized void timeout() throws SQLException {
@@ -198,6 +178,23 @@ public class PooledConnectionImpl extends AbstractConnectionDecorator {
 			this.setConnectionState(ConnectionState.TIMED_OUT);
 			ConnectionEvent event = new ConnectionEvent(this);
 			this.getConnectionEventListener().connectionTimedOut(event);
+		}
+	}
+
+	/**
+	 * This is the connection time out timer task. When a connection is opened, this thread is scheduled to run after a delay of <CONNECTION_TIME_OUT>
+	 * milliseconds. It will check if the connection is open and if so will mark the connection as timed out.
+	 *
+	 * @author nikhilagarwal
+	 */
+	private class PooledConnectionTimerTask extends TimerTask {
+
+		public void run() {
+			try {
+				timeout();
+			} catch (SQLException e) {
+				getLogger().log(Level.ERROR, e.getMessage(), e);
+			}
 		}
 	}
 }

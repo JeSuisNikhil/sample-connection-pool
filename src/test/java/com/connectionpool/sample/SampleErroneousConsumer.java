@@ -1,11 +1,10 @@
 package com.connectionpool.sample;
 
-import java.sql.SQLException;
-
+import com.connection.impl.PooledConnectionImpl;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.connection.impl.PooledConnectionImpl;
+import java.sql.SQLException;
 
 /**
  * This one will make the connection inValid. This is a sample consumer thread. Used for testing only. Each instance of this thread will do the
@@ -24,6 +23,14 @@ public class SampleErroneousConsumer implements Runnable {
 	private static final String LOG_THREAD_END = "Ending thread: ";
 	private static final String LOG_THREAD_START = "Starting thread: ";
 	private static Logger logger;
+	private PooledConnectionImpl connection;
+	private Long threadWaitTime;
+
+	public SampleErroneousConsumer(final PooledConnectionImpl connection, final Long threadWaitTime) {
+		super();
+		this.connection = connection;
+		this.threadWaitTime = threadWaitTime;
+	}
 
 	private static Logger getLogger() {
 		if (SampleErroneousConsumer.logger == null) {
@@ -36,20 +43,11 @@ public class SampleErroneousConsumer implements Runnable {
 	public static void main(final String... args) {
 		SampleErroneousConsumer consumer;
 		try {
-			consumer = new SampleErroneousConsumer((PooledConnectionImpl) SampleConnectionUtil.getConnection(), 20000l);
+			consumer = new SampleErroneousConsumer((PooledConnectionImpl) SampleConnectionUtil.getConnection(), 20000L);
 			consumer.run();
 		} catch (final SQLException e) {
 			SampleErroneousConsumer.getLogger().log(Level.ERROR, e.getMessage(), e);
 		}
-	}
-
-	private PooledConnectionImpl connection;
-	private Long threadWaitTime;
-
-	public SampleErroneousConsumer(final PooledConnectionImpl connection, final Long threadWaitTime) {
-		super();
-		this.connection = connection;
-		this.threadWaitTime = threadWaitTime;
 	}
 
 	/**
@@ -68,8 +66,16 @@ public class SampleErroneousConsumer implements Runnable {
 		return this.connection;
 	}
 
+	public void setConnection(final PooledConnectionImpl connection) {
+		this.connection = connection;
+	}
+
 	public Long getThreadWaitTime() {
 		return this.threadWaitTime;
+	}
+
+	public void setThreadWaitTime(final Long threadWaitTime) {
+		this.threadWaitTime = threadWaitTime;
 	}
 
 	@Override
@@ -89,13 +95,5 @@ public class SampleErroneousConsumer implements Runnable {
 		} catch (final Exception e) {
 			SampleErroneousConsumer.getLogger().log(Level.ERROR, e.getMessage(), e);
 		}
-	}
-
-	public void setConnection(final PooledConnectionImpl connection) {
-		this.connection = connection;
-	}
-
-	public void setThreadWaitTime(final Long threadWaitTime) {
-		this.threadWaitTime = threadWaitTime;
 	}
 }

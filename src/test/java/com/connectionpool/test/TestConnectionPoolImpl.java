@@ -1,19 +1,5 @@
 package com.connectionpool.test;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.naming.NamingException;
-
-import junit.framework.Assert;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.connection.impl.PooledConnectionImpl;
 import com.connectionpool.ConnectionPoolImpl;
 import com.connectionpool.ConnectionPoolProperties;
@@ -21,6 +7,17 @@ import com.connectionpool.sample.SampleConnectionPoolFactory;
 import com.connectionpool.sample.SampleConnectionUtil;
 import com.connectionpool.sample.SampleConsumer;
 import com.connectionpool.sample.SampleErroneousConsumer;
+import junit.framework.Assert;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.junit.Before;
+import org.junit.Test;
+
+import javax.naming.NamingException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * JUnit tests
@@ -53,7 +50,7 @@ public class TestConnectionPoolImpl {
 			final String randomJndiName = "testConnectionTimeOut";
 
 			// deliberately make the sample consumer run for 1000 milliseconds more than connection time out
-			final Long threadWaitTime = new ConnectionPoolProperties().getConnectionTimeOut() + 1000l;
+			final Long threadWaitTime = new ConnectionPoolProperties().getConnectionTimeOut() + 1000L;
 			final PooledConnectionImpl pooledConnection = (PooledConnectionImpl) SampleConnectionUtil.getConnection(randomJndiName);
 			final SampleConsumer consumer = new SampleConsumer(pooledConnection, threadWaitTime);
 			consumer.run();
@@ -95,7 +92,7 @@ public class TestConnectionPoolImpl {
 		TestConnectionPoolImpl.getLogger().log(Level.INFO, "Starting testMaxIdleSize");
 		try {
 			final String randomJndiName = "testMaxIdleSize";
-			final List<Connection> connectionList = new ArrayList<Connection>();
+			final List<Connection> connectionList = new ArrayList<>();
 			final ConnectionPoolProperties connectionPoolProperties = new ConnectionPoolProperties();
 			final int maxIdleSize = connectionPoolProperties.getMaxIdle();
 			final int maxSize = connectionPoolProperties.getMaxSize();
@@ -181,7 +178,7 @@ public class TestConnectionPoolImpl {
 		TestConnectionPoolImpl.getLogger().log(Level.INFO, "Starting testMultiConnectionPoolManagement");
 		try {
 			final String randomJndiName = "testMultiConnectionPoolManagement";
-			final List<Thread> threads = new ArrayList<Thread>();
+			final List<Thread> threads = new ArrayList<>();
 			final ConnectionPoolProperties connectionPoolProperties = new ConnectionPoolProperties();
 			final Integer maxSize = connectionPoolProperties.getMaxSize();
 			final Long waitTimeOut = connectionPoolProperties.getWaitTimeOut();
@@ -220,7 +217,7 @@ public class TestConnectionPoolImpl {
 		TestConnectionPoolImpl.getLogger().log(Level.INFO, "Starting testMultiConnectionPoolManagementWithMaintenance");
 		try {
 			final String dataSourceJndi = "testMultiConnectionPoolManagementWithMaintenance";
-			final List<Thread> threads = new ArrayList<Thread>();
+			final List<Thread> threads = new ArrayList<>();
 			final ConnectionPoolProperties connectionPoolProperties = new ConnectionPoolProperties();
 			final Integer maxSize = connectionPoolProperties.getMaxSize();
 			final Long waitTimeOut = connectionPoolProperties.getWaitTimeOut();
@@ -274,7 +271,7 @@ public class TestConnectionPoolImpl {
 		TestConnectionPoolImpl.getLogger().log(Level.INFO, "Starting testRunningOneConnection");
 		try {
 			final String randomJndiName = "testRunningOneConnection";
-			final Long threadWaitTime = new ConnectionPoolProperties().getConnectionTimeOut() - 1000l;
+			final Long threadWaitTime = new ConnectionPoolProperties().getConnectionTimeOut() - 1000L;
 			final PooledConnectionImpl pooledConnection = (PooledConnectionImpl) SampleConnectionUtil.getConnection(randomJndiName);
 			final SampleConsumer consumer = new SampleConsumer(pooledConnection, threadWaitTime);
 			consumer.run();
@@ -295,7 +292,7 @@ public class TestConnectionPoolImpl {
 		TestConnectionPoolImpl.getLogger().log(Level.INFO, "Starting testWaitTimeOut");
 		try {
 			final String randomJndiName = "testWaitTimeOut";
-			final Long threadWaitTime = new ConnectionPoolProperties().getWaitTimeOut() + 2000l;
+			final Long threadWaitTime = new ConnectionPoolProperties().getWaitTimeOut() + 2000L;
 			final ConnectionPoolProperties connectionPoolProperties = new ConnectionPoolProperties();
 			final int maxSize = connectionPoolProperties.getMaxSize();
 			for (int i = 0; i < maxSize; i++) {
